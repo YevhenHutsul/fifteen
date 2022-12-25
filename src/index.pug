@@ -10,9 +10,10 @@ html(lang="ru")
         - var values = new Array(16).fill(0).map((_,index) => index + 1);
         .page
             h1 Fifteen
-            .fifteen#fifteen
-                each value in values
-                    button.item(data-matrix-id=value)
-                        span.itemVal= value
-            button.button#shuffle reset
+            .game#game
+                .fifteen#fifteen
+                    each value in values
+                        button.item(data-matrix-id=value)
+                            span.itemVal= value
+                button.button#shuffle reset
         script(src="/js/index.js")

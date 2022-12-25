@@ -1,5 +1,7 @@
 const containerNode = document.getElementById('fifteen');
+const gameNode = document.getElementById('game');
 const itemNodes = Array.from(document.querySelectorAll('.item'));
+let isShufle = false;
 const blankNumber = 16;
 itemNodes[blankNumber - 1].style.display = 'none';
 
@@ -9,14 +11,44 @@ let matrix = getMatrix(
 )
 setPostionItems(matrix)
 //2. Shuffle
+//document.getElementById('shuffle').addEventListener('click', () => {
+//    const shuffleMatrix = shuffleArray(matrix.flat());
+//    matrix = getMatrix(shuffleMatrix);
+//    setPostionItems(matrix)
+//})
+const maxShuffleCount = 100;
+let timer;
+const gameShuffleClassName = 'gameShuffle'
+
 document.getElementById('shuffle').addEventListener('click', () => {
-    const shuffleMatrix = shuffleArray(matrix.flat());
-    matrix = getMatrix(shuffleMatrix);
-    setPostionItems(matrix)
+    if(isShufle){
+        return
+    }
+    let shuffleCount = 0;
+    isShufle = true;
+    clearInterval(timer);
+    if(shuffleCount === 0){
+        timer = setInterval(()=>{
+            randomSwap(matrix);
+            setPostionItems(matrix);
+            shuffleCount += 1;
+            gameNode.classList.add(gameShuffleClassName)
+            if(shuffleCount >= maxShuffleCount){
+                shuffleCount = 0;
+                isShufle = false;
+                gameNode.classList.remove(gameShuffleClassName)
+                clearInterval(timer);
+            }
+        },70)
+    }
 })
+
 
 //3. Change position by click
 containerNode.addEventListener('click', (event) => {
+    if(isShufle){
+        return
+    }
     const buttonNode = event.target.closest('button');
     const buttonNumber = Number(buttonNode.dataset.matrixId);
 
@@ -31,6 +63,9 @@ containerNode.addEventListener('click', (event) => {
 })
 //4. Change position by arrow
 window.addEventListener('keydown', (event) => {
+    if(isShufle){
+        return
+    }
     if (!event.key.includes('Arrow')) {
         return
     }
@@ -68,6 +103,39 @@ window.addEventListener('keydown', (event) => {
 
 
 //helpers
+let blockedCoords = null;
+function randomSwap(){
+    const blankCoords = findButtonCoord(blankNumber, matrix);
+
+    const validCoords = findValidCoords({
+        blankCoords, 
+        matrix,
+        blockedCoords
+    })
+
+    const swapCoords = validCoords[Math.floor(Math.random() * validCoords.length)];
+
+    swap(blankCoords,swapCoords, matrix);
+    blockedCoords = blankCoords;
+}
+
+function findValidCoords({blankCoords, matrix, blockedCoords}){
+    const validMooves =[];
+
+    for(let y = 0; y < matrix.length; y++){
+        for(let x = 0; x < matrix[y].length; x++){
+            if(isValidChange({x,y}, blankCoords)){
+                if(!blockedCoords || !(
+                    blockedCoords.x === x && blockedCoords.y === y
+                )){
+                    validMooves.push({x,y})
+                }
+            }
+        }
+    }
+    return validMooves;
+}
+
 function getMatrix(arr) {
     const matrix = [[], [], [], []];
     let x = 0;
